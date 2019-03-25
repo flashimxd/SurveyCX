@@ -1,5 +1,13 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, UIManager, LayoutAnimation, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  UIManager,
+  LayoutAnimation,
+  Alert,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { Input, Button, AirbnbRating, Icon } from 'react-native-elements';
 
 UIManager.setLayoutAnimationEnabledExperimental &&
@@ -39,15 +47,14 @@ export default class FormComponent extends Component {
   startSurvey = () => {
     this.setState({ loading: true });
 
-    console.log('start survey');
-
     setInterval(() => {
       this.setState({ loading: false });
       this.setState({ showQuestions: true });
     }, 1000);
   };
   finishSurvey = () => {
-    this.setState({ showQuestions: true });
+    this.setState({ showQuestions: false });
+    this.props.finishFeedback();
   };
   form = () => (
     <View
@@ -83,18 +90,15 @@ export default class FormComponent extends Component {
   );
   previosQuestions = () => {
     const { currentQuestion } = this.state;
-    const current = currentQuestion && currentQuestion - 1;
+    const current = currentQuestion - 1;
     this.setState({ currentQuestion: current });
-    this.showQuestions();
   };
   nextQuestions = () => {
-    const { currentQuestion } = this.state;
-    const current = currentQuestion <= 4 && currentQuestion + 1;
+    const { currentQuestion, totalQuestions } = this.state;
+    const current = currentQuestion < totalQuestions && currentQuestion + 1;
     this.setState({ currentQuestion: current });
     console.log(currentQuestion);
-    if (currentQuestion <= 4) {
-      this.showQuestions();
-    } else {
+    if (currentQuestion >= totalQuestions - 1) {
       Alert.alert(
         'Survey Complete!',
         'Thank you! Now you are in the competition!',
@@ -111,12 +115,14 @@ export default class FormComponent extends Component {
     }
   };
   ratingCompleted = rating => {
+    console.log(rating);
     console.log('Rating is: ' + rating);
     this.setState({ currentRating: rating });
   };
   showQuestions = () => {
     LayoutAnimation.spring();
     const { currentQuestion, totalQuestions } = this.state;
+    // console.log(question);
     return (
       <View
         style={{
@@ -129,15 +135,15 @@ export default class FormComponent extends Component {
           {`Question: ${currentQuestion + 1} / ${totalQuestions}`}
         </Text>
         <Text style={{ fontWeight: 'bold', fontSize: 20, padding: 20 }}>
-          {questions[currentQuestion].title}
+          {questions[currentQuestion] ? questions[currentQuestion].title : ''}
         </Text>
         <View style={{ flex: 1, paddingTop: 50, marginBottom: 50 }}>
           <AirbnbRating
             count={5}
-            reviews={['Terrible', 'Bad', 'OK', 'Good', 'Very Good']}
+            reviews={['Horrible', 'Bad', 'Normal', 'Good', 'Awesome']}
             defaultRating={3}
             size={50}
-            onFinishRating={() => this.ratingCompleted()}
+            onFinishRating={rating => this.ratingCompleted(rating)}
           />
         </View>
         <View
@@ -148,19 +154,23 @@ export default class FormComponent extends Component {
             flexDirection: 'row',
             width: '100%',
           }}>
-          <Button
-            title="Previous"
-            disabled={currentQuestion < 1 && true}
-            icon={<Icon name="arrow-back" size={15} color="white" />}
-            //loading={this.state.loading}
-            onPress={() => this.previosQuestions()}
-          />
-          <Button
-            title={currentQuestion < 4 ? 'Next' : 'Finish'}
-            //loading={this.state.loading}
-            onPress={() => this.nextQuestions()}
-            icon={<Icon name="arrow-forward" size={15} color="white" />}
-          />
+          {currentQuestion >= 1 && (
+            <TouchableWithoutFeedback onPress={() => this.previosQuestions()}>
+              <View style={{ flexDirection: 'row' }}>
+                <Icon size={40} name="chevron-left" type="font-awesome" />
+                <Text style={{ fontSize: 20, padding: 5 }}>Previous</Text>
+              </View>
+            </TouchableWithoutFeedback>
+          )}
+
+          <TouchableWithoutFeedback onPress={() => this.nextQuestions()}>
+            <View style={{ flexDirection: 'row' }}>
+              <Text style={{ fontSize: 20, padding: 5 }}>
+                {currentQuestion < 4 ? 'Next' : 'Finish'}
+              </Text>
+              <Icon size={40} name="chevron-right" type="font-awesome" />
+            </View>
+          </TouchableWithoutFeedback>
         </View>
       </View>
     );

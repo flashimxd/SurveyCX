@@ -11,17 +11,18 @@ import {
   LayoutAnimation,
   UIManager,
 } from 'react-native';
+import { Overlay } from 'react-native-elements';
 import FormComponent from './FormComponent';
 
 UIManager.setLayoutAnimationEnabledExperimental &&
   UIManager.setLayoutAnimationEnabledExperimental(true);
 
 const faces = [
-  { id: 1, uri: 'https://i.ibb.co/bvRjdS2/1.png' },
-  { id: 2, uri: 'https://i.ibb.co/zQgSHSd/2.png' },
-  { id: 3, uri: 'https://i.ibb.co/G7qNQTs/3.png' },
-  { id: 4, uri: 'https://i.ibb.co/yf1TB4D/4.png' },
-  { id: 5, uri: 'https://i.ibb.co/MkPCcGK/5.png' },
+  { id: 5, uri: 'https://i.ibb.co/MkPCcGK/5.png', title: 'Horrible' },
+  { id: 4, uri: 'https://i.ibb.co/yf1TB4D/4.png', title: 'Bad' },
+  { id: 3, uri: 'https://i.ibb.co/G7qNQTs/3.png', title: 'Normal' },
+  { id: 2, uri: 'https://i.ibb.co/zQgSHSd/2.png', title: 'Good' },
+  { id: 1, uri: 'https://i.ibb.co/bvRjdS2/1.png', title: 'Awesome' },
 ];
 
 export default class Facebox extends Component {
@@ -31,15 +32,26 @@ export default class Facebox extends Component {
       active: 0,
       formActive: false,
       loading: false,
+      showModal: false,
     };
-    this.springValue = new Animated.Value(1);
-    this.springValueOff = new Animated.Value(1.3);
+    this.springValue = new Animated.Value(1.3);
+    this.springValueOff = new Animated.Value(1);
     this.imageOpacityValue = new Animated.Value(1);
+    this.imageOpacityValueOff = new Animated.Value(0.6);
+  }
+
+  componentWillMount() {
+    this.springValue.setValue(1);
+    this.imageOpacityValue.setValue(1);
   }
 
   startFeedback = () => {
     this.setState({ formActive: true });
-    LayoutAnimation.spring();
+  };
+
+  finishFeedback = () => {
+    this.setState({ formActive: false });
+    this.setState({ active: 0 });
   };
 
   confirmNps = () => {
@@ -58,22 +70,8 @@ export default class Facebox extends Component {
     );
   };
   spring = id => {
-    // console.log(this.view);
-    // console.log(id);
     this.setState({ active: id });
-    const { active } = this.state;
-
-    Animated.parallel([
-      Animated.timing(this.imageOpacityValue, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.linear,
-      }),
-      Animated.spring(this.springValue, {
-        toValue: 1.3,
-      }),
-    ]).start();
-
+    this.setState({ showModal: true });
     setTimeout(() => {
       Alert.alert(
         'Feedback Survey',
@@ -92,14 +90,28 @@ export default class Facebox extends Component {
   };
   shouldComponentUpdate() {
     LayoutAnimation.spring();
+    Animated.parallel([
+      Animated.timing(this.imageOpacityValue, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.linear,
+      }),
+      Animated.timing(this.imageOpacityValueOff, {
+        toValue: 0.6,
+        duration: 500,
+        easing: Easing.linear,
+      }),
+      Animated.spring(this.springValue, {
+        toValue: 1.3,
+      }),
+      Animated.spring(this.springValueOff, {
+        toValue: 1,
+      }),
+    ]).start();
     return true;
   }
   render() {
-    const { uri, id } = this.props;
-    const imageOpacityStyle = {
-      opacity: this.imageOpacityValue,
-    };
-    const { active, formActive } = this.state;
+    const { active, formActive, showModal } = this.state;
     return (
       <View style={{ flex: 1, flexDirection: 'column' }}>
         <View style={{ flex: 1 }}>
@@ -144,25 +156,47 @@ export default class Facebox extends Component {
           </ImageBackground>
         </View>
         <View style={styles.boxContainer}>
-          {faces.map(face => (
-            <TouchableWithoutFeedback onPress={() => this.spring(face.id)} key={face.id}>
-              <Animated.Image
-                id={face.id}
-                source={{ uri: face.uri }}
-                style={[
-                  imageOpacityStyle,
-                  {
-                    width: 172,
-                    height: 173,
-                    transform: [{ scale: this.springValue }],
-                  },
-                ]}
-                resizeMode={'contain'}
-              />
-            </TouchableWithoutFeedback>
-          ))}
+          {faces.map(face => {
+            return (
+              <TouchableWithoutFeedback onPress={() => this.spring(face.id)} key={face.id}>
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                  }}>
+                  <Animated.Text
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                      padding: 30,
+                      opacity:
+                        active === face.id ? this.imageOpacityValue : this.imageOpacityValueOff,
+                    }}>
+                    {face.title}
+                  </Animated.Text>
+                  <Animated.Image
+                    source={{ uri: face.uri }}
+                    style={{
+                      opacity:
+                        active === face.id ? this.imageOpacityValue : this.imageOpacityValueOff,
+                      width: 172,
+                      height: 173,
+                      transform: [
+                        { scale: active === face.id ? this.springValue : this.springValueOff },
+                      ],
+                    }}
+                    resizeMode={'contain'}
+                  />
+                </View>
+              </TouchableWithoutFeedback>
+            );
+          })}
         </View>
-        {formActive && <FormComponent />}
+        {formActive && <FormComponent finishFeedback={() => this.finishFeedback()} />}
+        <Overlay isVisible={showModal} width={500} height={300}>
+          <Text>Hello from Overlay!</Text>
+        </Overlay>
       </View>
     );
   }
@@ -184,4 +218,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
+  titleOn: {},
 });
