@@ -11,8 +11,10 @@ import {
   LayoutAnimation,
   UIManager,
 } from 'react-native';
-import { Overlay } from 'react-native-elements';
+import { Button, Icon } from 'react-native-elements';
+import * as Animatable from 'react-native-animatable';
 import FormComponent from './FormComponent';
+import Modal from './ModalComponent';
 
 UIManager.setLayoutAnimationEnabledExperimental &&
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -33,6 +35,7 @@ export default class Facebox extends Component {
       formActive: false,
       loading: false,
       showModal: false,
+      showModalCompetition: false,
     };
     this.springValue = new Animated.Value(1.3);
     this.springValueOff = new Animated.Value(1);
@@ -46,6 +49,7 @@ export default class Facebox extends Component {
   }
 
   startFeedback = () => {
+    this.setState({ showModalCompetition: false });
     this.setState({ formActive: true });
   };
 
@@ -55,6 +59,9 @@ export default class Facebox extends Component {
   };
 
   confirmNps = () => {
+    this.setState({ showModal: false, showModalCompetition: true });
+
+    /*
     Alert.alert(
       'Would you mind to help us to improve ??',
       'Answer some question about our service, and enter the competition!!',
@@ -68,34 +75,92 @@ export default class Facebox extends Component {
       ],
       { cancelable: false }
     );
+    */
   };
   spring = id => {
     this.setState({ active: id });
     this.setState({ showModal: true });
-    setTimeout(() => {
-      Alert.alert(
-        'Feedback Survey',
-        'Confirm ?',
-        [
-          {
-            text: 'Cancel',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
-          },
-          { text: 'Yes', onPress: () => this.confirmNps() },
-        ],
-        { cancelable: false }
-      );
-    }, 500);
   };
+  modalConfirmFeedback = showModal => {
+    const { active } = this.state;
+    const option = faces.find(el => el.id === active);
+    return (
+      <Modal show={showModal} width={500} height={300}>
+        <React.Fragment>
+          <Animatable.Text animation="slideInLeft" style={{ fontWeight: 'bold', fontSize: 30 }}>
+            Are you sure?
+          </Animatable.Text>
+          <Animatable.Text animation="slideInRight" style={{ fontSize: 30 }}>
+            You vote:
+          </Animatable.Text>
+          <Animatable.Text animation="slideInUp" style={{ fontWeight: 'bold', fontSize: 25 }}>
+            {option.title}
+          </Animatable.Text>
+          <Animatable.View
+            animation="fadeInUpBig"
+            style={{
+              paddingTop: 50,
+              justifyContent: 'space-between',
+              flexDirection: 'row',
+              width: '90%',
+            }}>
+            <Button
+              icon={<Icon name="check-circle" size={15} color="white" />}
+              title="Confirm"
+              buttonStyle={{ width: 200 }}
+              onPress={() => this.confirmNps()}
+            />
+            <Button
+              title="Cancel"
+              type="outline"
+              buttonStyle={{ width: 200 }}
+              onPress={() => this.setState({ showModal: false })}
+            />
+          </Animatable.View>
+        </React.Fragment>
+      </Modal>
+    );
+  };
+
+  modalAcceptSurvey = showModal => {
+    return (
+      <Modal show={showModal} width={500} height={300}>
+        <React.Fragment>
+          <Animatable.Text animation="slideInLeft" style={{ fontWeight: 'bold', fontSize: 30 }}>
+            Would you mind to help us to improve ??
+          </Animatable.Text>
+          <Animatable.Text animation="slideInRight" style={{ fontSize: 30 }}>
+            Answer some question about our service, and enter the competition!!
+          </Animatable.Text>
+          <Animatable.View
+            animation="fadeInUpBig"
+            style={{
+              paddingTop: 50,
+              justifyContent: 'space-between',
+              flexDirection: 'row',
+              width: '90%',
+            }}>
+            <Button
+              icon={<Icon name="check-circle" size={15} color="white" />}
+              title="Yes, Lets go!"
+              buttonStyle={{ width: 200 }}
+              onPress={() => this.startFeedback()}
+            />
+            <Button
+              title="No, Thanks"
+              type="outline"
+              buttonStyle={{ width: 200 }}
+              onPress={() => this.setState({ showModalCompetition: false })}
+            />
+          </Animatable.View>
+        </React.Fragment>
+      </Modal>
+    );
+  };
+
   shouldComponentUpdate() {
     LayoutAnimation.spring();
     Animated.parallel([
-      Animated.timing(this.imageOpacityValue, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.linear,
-      }),
       Animated.timing(this.imageOpacityValueOff, {
         toValue: 0.6,
         duration: 500,
@@ -111,7 +176,7 @@ export default class Facebox extends Component {
     return true;
   }
   render() {
-    const { active, formActive, showModal } = this.state;
+    const { active, formActive, showModal, showModalCompetition } = this.state;
     return (
       <View style={{ flex: 1, flexDirection: 'column' }}>
         <View style={{ flex: 1 }}>
@@ -149,7 +214,7 @@ export default class Facebox extends Component {
                     fontSize: 40,
                     alignSelf: 'center',
                   }}>
-                  Help us to improve our service with a quick feedback.
+                  Help us to improve our service with a quick Survey.
                 </Text>
               </View>
             </View>
@@ -194,9 +259,8 @@ export default class Facebox extends Component {
           })}
         </View>
         {formActive && <FormComponent finishFeedback={() => this.finishFeedback()} />}
-        <Overlay isVisible={showModal} width={500} height={300}>
-          <Text>Hello from Overlay!</Text>
-        </Overlay>
+        {showModal && this.modalConfirmFeedback(showModal)}
+        {showModalCompetition && this.modalAcceptSurvey(showModalCompetition)}
       </View>
     );
   }
