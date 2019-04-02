@@ -5,6 +5,7 @@ import FaceBox from './FaceboxComponent';
 class HomeComponent extends Component {
   static navigationOptions = {
     title: 'Home',
+    header: null,
   };
   navigateToHistory() {
     const { navigation } = this.props;

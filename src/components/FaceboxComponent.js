@@ -1,23 +1,7 @@
 import React, { Component } from 'react';
-import {
-  View,
-  TouchableWithoutFeedback,
-  Animated,
-  Alert,
-  Easing,
-  Text,
-  StyleSheet,
-  ImageBackground,
-  LayoutAnimation,
-  UIManager,
-} from 'react-native';
-import { Button, Icon } from 'react-native-elements';
-import * as Animatable from 'react-native-animatable';
+import { View, TouchableWithoutFeedback, Animated, Easing, Text, StyleSheet } from 'react-native';
 import FormComponent from './FormComponent';
 import Modal from './ModalComponent';
-
-UIManager.setLayoutAnimationEnabledExperimental &&
-  UIManager.setLayoutAnimationEnabledExperimental(true);
 
 const faces = [
   { id: 5, uri: 'https://i.ibb.co/MkPCcGK/5.png', title: 'Horrible' },
@@ -35,21 +19,16 @@ export default class Facebox extends Component {
       formActive: false,
       loading: false,
       showModal: false,
-      showModalCompetition: false,
+      showModalRefuse: false,
     };
-    this.springValue = new Animated.Value(1.3);
-    this.springValueOff = new Animated.Value(1);
-    this.imageOpacityValue = new Animated.Value(1);
-    this.imageOpacityValueOff = new Animated.Value(0.6);
-  }
-
-  componentWillMount() {
-    this.springValue.setValue(1);
-    this.imageOpacityValue.setValue(1);
+    this.springValue = new Animated.Value(1);
+    this.springValueOff = new Animated.Value(1.3);
+    this.imageOpacityValue = new Animated.Value(0.6);
+    this.imageOpacityValueOff = new Animated.Value(1);
   }
 
   startFeedback = () => {
-    this.setState({ showModalCompetition: false });
+    this.setState({ showModal: false });
     this.setState({ formActive: true });
   };
 
@@ -60,165 +39,121 @@ export default class Facebox extends Component {
 
   confirmNps = () => {
     this.setState({ showModal: false, showModalCompetition: true });
+  };
+  finishFeedbackNotAccept = () => {
+    this.setState({ active: 0 });
+    this.setState({ showModal: false });
 
-    /*
-    Alert.alert(
-      'Would you mind to help us to improve ??',
-      'Answer some question about our service, and enter the competition!!',
-      [
-        {
-          text: 'No, Thanks',
-          onPress: () => console.log('No, Thanks'),
-          style: 'cancel',
-        },
-        { text: 'Yes, Lets go!', onPress: () => this.startFeedback() },
-      ],
-      { cancelable: false }
-    );
-    */
+    setTimeout(() => {
+      this.setState({ showModalRefuse: true });
+    }, 1000);
   };
   spring = id => {
     this.setState({ active: id });
-    this.setState({ showModal: true });
+
+    this.springValue.setValue(1.3);
+    this.imageOpacityValue.setValue(1);
+
+    setTimeout(() => {
+      this.setState({ showModal: true });
+    }, 1000);
   };
-  modalConfirmFeedback = showModal => {
-    const { active } = this.state;
-    const option = faces.find(el => el.id === active);
-    return (
-      <Modal show={showModal} width={500} height={300}>
-        <React.Fragment>
-          <Animatable.Text animation="slideInLeft" style={{ fontWeight: 'bold', fontSize: 30 }}>
-            Are you sure?
-          </Animatable.Text>
-          <Animatable.Text animation="slideInRight" style={{ fontSize: 30 }}>
-            You vote:
-          </Animatable.Text>
-          <Animatable.Text animation="slideInUp" style={{ fontWeight: 'bold', fontSize: 25 }}>
-            {option.title}
-          </Animatable.Text>
-          <Animatable.View
-            animation="fadeInUpBig"
-            style={{
-              paddingTop: 50,
-              justifyContent: 'space-between',
-              flexDirection: 'row',
-              width: '90%',
-            }}>
-            <Button
-              icon={<Icon name="check-circle" size={15} color="white" />}
-              title="Confirm"
-              buttonStyle={{ width: 200 }}
-              onPress={() => this.confirmNps()}
-            />
-            <Button
-              title="Cancel"
-              type="outline"
-              buttonStyle={{ width: 200 }}
-              onPress={() => this.setState({ showModal: false })}
-            />
-          </Animatable.View>
-        </React.Fragment>
-      </Modal>
-    );
+  cancelFeedback = () => {
+    this.setState({ active: 0, showModal: false });
   };
 
-  modalAcceptSurvey = showModal => {
-    return (
-      <Modal show={showModal} width={500} height={300}>
-        <React.Fragment>
-          <Animatable.Text animation="slideInLeft" style={{ fontWeight: 'bold', fontSize: 30 }}>
-            Would you mind to help us to improve ??
-          </Animatable.Text>
-          <Animatable.Text animation="slideInRight" style={{ fontSize: 30 }}>
-            Answer some question about our service, and enter the competition!!
-          </Animatable.Text>
-          <Animatable.View
-            animation="fadeInUpBig"
-            style={{
-              paddingTop: 50,
-              justifyContent: 'space-between',
-              flexDirection: 'row',
-              width: '90%',
-            }}>
-            <Button
-              icon={<Icon name="check-circle" size={15} color="white" />}
-              title="Yes, Lets go!"
-              buttonStyle={{ width: 200 }}
-              onPress={() => this.startFeedback()}
-            />
-            <Button
-              title="No, Thanks"
-              type="outline"
-              buttonStyle={{ width: 200 }}
-              onPress={() => this.setState({ showModalCompetition: false })}
-            />
-          </Animatable.View>
-        </React.Fragment>
-      </Modal>
-    );
+  hideModalRefuseSurvey = () => {
+    this.setState({ showModalRefuse: false });
   };
 
-  shouldComponentUpdate() {
-    LayoutAnimation.spring();
-    Animated.parallel([
-      Animated.timing(this.imageOpacityValueOff, {
-        toValue: 0.6,
-        duration: 500,
-        easing: Easing.linear,
-      }),
-      Animated.spring(this.springValue, {
-        toValue: 1.3,
-      }),
-      Animated.spring(this.springValueOff, {
-        toValue: 1,
-      }),
-    ]).start();
+  modalRefuseSurvey = () => (
+    <Modal
+      show={this.state.showModalRefuse}
+      width={500}
+      height={300}
+      title="Thank you!"
+      description=" You vote was registered, thank you for your time!"
+      btnOkTitle="Finish"
+      btnOkCallback={() => this.hideModalRefuseSurvey()}
+    />
+  );
+
+  modalAcceptSurvey = () => (
+    <Modal
+      show={this.state.showModal}
+      width={500}
+      height={300}
+      title="Would you mind to help us to improve ?"
+      description=" Answer some question about our service, and enter in the competition!"
+      btnOkTitle="Yes, Lets go!"
+      btnCancelTitle="No, Thanks"
+      btnOkCallback={() => this.startFeedback()}
+      btnCancelCallback={() => this.finishFeedbackNotAccept()}
+    />
+  );
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (nextState.active !== this.state.active) {
+      this.springValueOff.setValue(1.3);
+      this.imageOpacityValueOff.setValue(1);
+
+      Animated.parallel([
+        Animated.spring(this.springValueOff, {
+          toValue: 1,
+          friction: 1,
+        }),
+        Animated.timing(this.imageOpacityValueOff, {
+          toValue: 0.6,
+          duration: 500,
+          easing: Easing.linear,
+        }),
+      ]).start();
+    }
+
     return true;
   }
+
   render() {
-    const { active, formActive, showModal, showModalCompetition } = this.state;
+    const { active, formActive, showModal, showModalRefuse } = this.state;
     return (
-      <View style={{ flex: 1, flexDirection: 'column' }}>
+      <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#27989f' }}>
         <View style={{ flex: 1 }}>
-          <ImageBackground
-            source={require('../assets/images/retail.jpg')}
-            style={{ width: '100%', height: '100%' }}>
-            <View
-              style={{
-                marginTop: '10%',
-                width: '100%',
-                height: 200,
-                alignItems: 'center',
-                backgroundColor: 'white',
-                alignSelf: 'center',
-                opacity: 0.6,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.2,
-                shadowRadius: 20,
-                elevation: 3,
-              }}>
-              <View style={{ flex: 1, flexDirection: 'column', padding: 10 }}>
-                <Text
-                  style={{
-                    flex: 1,
-                    fontWeight: 'bold',
-                    fontSize: 60,
-                    alignSelf: 'center',
-                  }}>
-                  How was our service today?
-                </Text>
-                <Text
-                  style={{
-                    flex: 1,
-                    fontWeight: 'bold',
-                    fontSize: 40,
-                    alignSelf: 'center',
-                  }}>
-                  Help us to improve our service with a quick Survey.
-                </Text>
-              </View>
+          <View
+            style={{
+              width: '100%',
+              height: '100%',
+              alignItems: 'center',
+              alignSelf: 'center',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.2,
+              shadowRadius: 20,
+              elevation: 3,
+              backgroundColor: '#27989f',
+            }}>
+            <View style={{ flex: 1, flexDirection: 'column', padding: 10, marginTop: '2%' }}>
+              <Animated.Image
+                source={require('../assets/images/servciedockicon.png')}
+                style={{
+                  alignSelf: 'center',
+                  width: 162,
+                  height: 162,
+                }}
+                resizeMode={'contain'}
+              />
+
+              <Text
+                style={{
+                  flex: 1,
+                  fontWeight: 'bold',
+                  fontSize: 45,
+                  alignSelf: 'center',
+                  marginTop: '5%',
+                  color: 'white',
+                }}>
+                How was your experience at our Store today?
+              </Text>
             </View>
-          </ImageBackground>
+          </View>
         </View>
         <View style={styles.boxContainer}>
           {faces.map(face => {
@@ -245,8 +180,8 @@ export default class Facebox extends Component {
                     style={{
                       opacity:
                         active === face.id ? this.imageOpacityValue : this.imageOpacityValueOff,
-                      width: 172,
-                      height: 173,
+                      width: 162,
+                      height: 162,
                       transform: [
                         { scale: active === face.id ? this.springValue : this.springValueOff },
                       ],
@@ -259,8 +194,8 @@ export default class Facebox extends Component {
           })}
         </View>
         {formActive && <FormComponent finishFeedback={() => this.finishFeedback()} />}
-        {showModal && this.modalConfirmFeedback(showModal)}
-        {showModalCompetition && this.modalAcceptSurvey(showModalCompetition)}
+        {showModal && this.modalAcceptSurvey()}
+        {showModalRefuse && this.modalRefuseSurvey()}
       </View>
     );
   }
@@ -281,6 +216,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
   },
-  titleOn: {},
 });

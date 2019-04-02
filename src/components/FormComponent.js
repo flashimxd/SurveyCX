@@ -1,17 +1,8 @@
-import React, { Component } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  UIManager,
-  LayoutAnimation,
-  Alert,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 import { Input, Button, AirbnbRating, Icon } from 'react-native-elements';
-
-UIManager.setLayoutAnimationEnabledExperimental &&
-  UIManager.setLayoutAnimationEnabledExperimental(true);
+import Modal from './ModalComponent';
 
 const questions = [
   {
@@ -33,15 +24,18 @@ const questions = [
   },
 ];
 
-export default class FormComponent extends Component {
+export default class FormComponent extends React.PureComponent {
+  handlerViewEf = ref => (this.view = ref);
   constructor() {
     super();
     this.state = {
       loading: false,
       showQuestions: false,
+      showModalFinish: false,
       totalQuestions: 5,
       currentQuestion: 0,
       currentRating: 0,
+      question: {},
     };
   }
   startSurvey = () => {
@@ -53,11 +47,12 @@ export default class FormComponent extends Component {
     }, 1000);
   };
   finishSurvey = () => {
-    this.setState({ showQuestions: false });
+    this.setState({ showQuestions: false, showModalFinish: false });
     this.props.finishFeedback();
   };
   form = () => (
-    <View
+    <Animatable.View
+      animation="lightSpeedIn"
       style={{
         flex: 1,
         width: 100,
@@ -86,58 +81,63 @@ export default class FormComponent extends Component {
         loading={this.state.loading}
         onPress={() => this.startSurvey()}
       />
-    </View>
+    </Animatable.View>
   );
   previosQuestions = () => {
     const { currentQuestion } = this.state;
     const current = currentQuestion - 1;
-    this.setState({ currentQuestion: current });
+    this.setState({ currentQuestion: current, question: questions[current] });
+    this.view.zoomInRight();
   };
   nextQuestions = () => {
     const { currentQuestion, totalQuestions } = this.state;
     const current = currentQuestion < totalQuestions && currentQuestion + 1;
-    this.setState({ currentQuestion: current });
-    console.log(currentQuestion);
+    this.setState({ currentQuestion: current, question: questions[current] });
+    this.view.zoomInLeft();
     if (currentQuestion >= totalQuestions - 1) {
-      Alert.alert(
-        'Survey Complete!',
-        'Thank you! Now you are in the competition!',
-        [
-          {
-            text: 'Cancel',
-            onPress: () => this.finishSurvey(),
-            style: 'cancel',
-          },
-          { text: 'Ok', onPress: () => this.finishSurvey() },
-        ],
-        { cancelable: false }
-      );
+      setTimeout(() => {
+        this.setState({ showModalFinish: true });
+      }, 1000);
     }
   };
+  modalFinishSurvey = () => {
+    return (
+      <Modal
+        show={this.state.showModalFinish}
+        width={500}
+        height={300}
+        title="Survey Complete!"
+        description="Thank you! Now you are in the competition!"
+        btnOkTitle="Finish"
+        btnOkCallback={() => this.props.finishFeedback()}
+      />
+    );
+  };
   ratingCompleted = rating => {
-    console.log(rating);
     console.log('Rating is: ' + rating);
     this.setState({ currentRating: rating });
   };
   showQuestions = () => {
-    LayoutAnimation.spring();
-    const { currentQuestion, totalQuestions } = this.state;
-    // console.log(question);
+    const { currentQuestion, totalQuestions, question } = this.state;
     return (
-      <View
+      <Animatable.View
+        ref={this.handlerViewEf}
+        animation="bounceInUp"
         style={{
           flex: 1,
           flexDirection: 'column',
           padding: 20,
           alignItems: 'center',
         }}>
-        <Text style={{ fontWeight: 'bold', fontSize: 25 }}>
+        <Animatable.Text style={{ fontWeight: 'bold', fontSize: 25 }} animation="fadeInRight">
           {`Question: ${currentQuestion + 1} / ${totalQuestions}`}
-        </Text>
-        <Text style={{ fontWeight: 'bold', fontSize: 20, padding: 20 }}>
-          {questions[currentQuestion] ? questions[currentQuestion].title : ''}
-        </Text>
-        <View style={{ flex: 1, paddingTop: 50, marginBottom: 50 }}>
+        </Animatable.Text>
+        <Animatable.Text
+          style={{ fontWeight: 'bold', fontSize: 20, padding: 20 }}
+          animation="fadeInLeft">
+          {question ? question.title : ''}
+        </Animatable.Text>
+        <Animatable.View style={{ flex: 1, paddingTop: 50, marginBottom: 50 }} animation="flipInX">
           <AirbnbRating
             count={5}
             reviews={['Horrible', 'Bad', 'Normal', 'Good', 'Awesome']}
@@ -145,7 +145,7 @@ export default class FormComponent extends Component {
             size={50}
             onFinishRating={rating => this.ratingCompleted(rating)}
           />
-        </View>
+        </Animatable.View>
         <View
           style={{
             flex: 1,
@@ -172,17 +172,15 @@ export default class FormComponent extends Component {
             </View>
           </TouchableWithoutFeedback>
         </View>
-      </View>
+      </Animatable.View>
     );
   };
-  shouldComponentUpdate() {
-    LayoutAnimation.spring();
-    return true;
-  }
   render() {
+    const { showQuestions, showModalFinish } = this.state;
     return (
       <View style={styles.boxContainer}>
-        {this.state.showQuestions ? this.showQuestions() : this.form()}
+        {showQuestions ? this.showQuestions() : this.form()}
+        {showModalFinish && this.modalFinishSurvey()}
       </View>
     );
   }
