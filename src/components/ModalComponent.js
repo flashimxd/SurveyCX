@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Overlay, Button, Icon } from 'react-native-elements';
+import { View, StyleSheet, Text } from 'react-native';
+import { Overlay, Button } from 'react-native-elements';
 import * as Animatable from 'react-native-animatable';
 
 export default props => {
@@ -23,15 +23,10 @@ export default props => {
       overlayBackgroundColor="white">
       <View style={styles.container}>
         <React.Fragment>
-          <Animatable.Text animation="slideInLeft" style={styles.titleText}>
-            {title}
-          </Animatable.Text>
-          <Animatable.Text animation="slideInRight" style={styles.descriptionText}>
-            {description}
-          </Animatable.Text>
-          <Animatable.View animation="fadeInUpBig" style={styles.animatableView}>
+          <Text style={styles.titleText}>{title}</Text>
+          <Text style={styles.descriptionText}>{description}</Text>
+          <Animatable.View animation="fadeIn" style={styles.animatableView}>
             <Button
-              icon={<Icon name="check-circle" size={15} color="white" />}
               title={btnOkTitle}
               buttonStyle={
                 ([styles.buttonStyle], !btnCancelCallback ? { width: 400 } : { width: 200 })
@@ -56,6 +51,7 @@ export default props => {
 
 const styles = StyleSheet.create({
   container: {
+    padding: 10,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',

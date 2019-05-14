@@ -30,21 +30,20 @@ export default class FormComponent extends React.PureComponent {
     super();
     this.state = {
       loading: false,
-      showQuestions: false,
+      showQuestions: true,
       showModalFinish: false,
-      totalQuestions: 5,
+      showConfirmForm: false,
+      totalQuestions: questions.length,
       currentQuestion: 0,
       currentRating: 0,
-      question: {},
+      question: questions[0],
     };
   }
-  startSurvey = () => {
-    this.setState({ loading: true });
-
-    setInterval(() => {
-      this.setState({ loading: false });
-      this.setState({ showQuestions: true });
-    }, 1000);
+  confirmSurvey = () => {
+    this.setState({ showQuestions: false, showModalFinish: true });
+    setTimeout(() => {
+      this.finishSurvey();
+    }, 4000);
   };
   finishSurvey = () => {
     this.setState({ showQuestions: false, showModalFinish: false });
@@ -57,29 +56,33 @@ export default class FormComponent extends React.PureComponent {
         flex: 1,
         width: 100,
         flexDirection: 'column',
-        padding: 20,
-        height: 250,
+        padding: 10,
+        height: 300,
         alignItems: 'center',
         justifyContent: 'space-around',
       }}>
-      <Text style={{ fontSize: 25, fontWeight: 'bold' }}>Personal Information</Text>
+      <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Personal Information</Text>
+      <Text style={{ padding: 13 }}>
+        Please add your details and hit "Send" to begin the survey. By hitting "Send" you're
+        agreeing to our Privacy Policy and T&Cs which can be found at: www.gotell.us/ddtcs
+      </Text>
       <Input
         placeholder="Name"
         leftIcon={{ type: 'font-awesome', name: 'user' }}
-        inputContainerStyle={{ padding: 10, margin: 20 }}
+        inputContainerStyle={{ padding: 10 }}
         inputStyle={{ color: 'black', padding: 10 }}
       />
       <Input
         placeholder="Email"
         leftIcon={{ type: 'font-awesome', name: 'envelope' }}
-        inputContainerStyle={{ padding: 10, margin: 20 }}
+        inputContainerStyle={{ padding: 10 }}
         inputStyle={{ color: 'black', padding: 10 }}
       />
       <Button
-        title="Start"
+        title="Send"
         buttonStyle={{ width: 300, marginTop: 40 }}
         loading={this.state.loading}
-        onPress={() => this.startSurvey()}
+        onPress={() => this.confirmSurvey()}
       />
     </Animatable.View>
   );
@@ -91,13 +94,14 @@ export default class FormComponent extends React.PureComponent {
   };
   nextQuestions = () => {
     const { currentQuestion, totalQuestions } = this.state;
-    const current = currentQuestion < totalQuestions && currentQuestion + 1;
+    const current = currentQuestion + 1;
+
     this.setState({ currentQuestion: current, question: questions[current] });
     this.view.zoomInLeft();
     if (currentQuestion >= totalQuestions - 1) {
       setTimeout(() => {
-        this.setState({ showModalFinish: true });
-      }, 1000);
+        this.setState({ showQuestions: false, showConfirmForm: true });
+      }, 500);
     }
   };
   modalFinishSurvey = () => {
@@ -106,8 +110,8 @@ export default class FormComponent extends React.PureComponent {
         show={this.state.showModalFinish}
         width={500}
         height={300}
-        title="Survey Complete!"
-        description="Thank you! Now you are in the competition!"
+        title="Thank you!"
+        description="You have been entered into the competition and winners will be notified by email!"
         btnOkTitle="Finish"
         btnOkCallback={() => this.props.finishFeedback()}
       />
@@ -130,19 +134,20 @@ export default class FormComponent extends React.PureComponent {
           alignItems: 'center',
         }}>
         <Animatable.Text style={{ fontWeight: 'bold', fontSize: 25 }} animation="fadeInRight">
-          {`Question: ${currentQuestion + 1} / ${totalQuestions}`}
+          {currentQuestion < totalQuestions &&
+            `Question: ${currentQuestion + 1} / ${totalQuestions}`}
         </Animatable.Text>
         <Animatable.Text
           style={{ fontWeight: 'bold', fontSize: 20, padding: 20 }}
           animation="fadeInLeft">
           {question ? question.title : ''}
         </Animatable.Text>
-        <Animatable.View style={{ flex: 1, paddingTop: 50, marginBottom: 50 }} animation="flipInX">
+        <Animatable.View style={{ flex: 1, paddingTop: 20, marginBottom: 30 }} animation="flipInX">
           <AirbnbRating
             count={5}
             reviews={['Horrible', 'Bad', 'Normal', 'Good', 'Awesome']}
             defaultRating={3}
-            size={50}
+            size={80}
             onFinishRating={rating => this.ratingCompleted(rating)}
           />
         </Animatable.View>
@@ -166,7 +171,7 @@ export default class FormComponent extends React.PureComponent {
           <TouchableWithoutFeedback onPress={() => this.nextQuestions()}>
             <View style={{ flexDirection: 'row' }}>
               <Text style={{ fontSize: 20, padding: 5 }}>
-                {currentQuestion < 4 ? 'Next' : 'Finish'}
+                {currentQuestion >= totalQuestions - 1 ? 'Finish' : 'Next'}
               </Text>
               <Icon size={40} name="chevron-right" type="font-awesome" />
             </View>
@@ -176,10 +181,11 @@ export default class FormComponent extends React.PureComponent {
     );
   };
   render() {
-    const { showQuestions, showModalFinish } = this.state;
+    const { showQuestions, showModalFinish, showConfirmForm } = this.state;
     return (
       <View style={styles.boxContainer}>
-        {showQuestions ? this.showQuestions() : this.form()}
+        {showQuestions && this.showQuestions()}
+        {showConfirmForm && this.form()}
         {showModalFinish && this.modalFinishSurvey()}
       </View>
     );

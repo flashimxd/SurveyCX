@@ -16,7 +16,7 @@ export default class Facebox extends Component {
     super();
     this.state = {
       active: 0,
-      formActive: false,
+      showForm: false,
       loading: false,
       showModal: false,
       showModalRefuse: false,
@@ -29,11 +29,11 @@ export default class Facebox extends Component {
 
   startFeedback = () => {
     this.setState({ showModal: false });
-    this.setState({ formActive: true });
+    this.setState({ showForm: true });
   };
 
   finishFeedback = () => {
-    this.setState({ formActive: false });
+    this.setState({ showForm: false });
     this.setState({ active: 0 });
   };
 
@@ -83,10 +83,10 @@ export default class Facebox extends Component {
       show={this.state.showModal}
       width={500}
       height={300}
-      title="Would you mind to help us to improve ?"
-      description=" Answer some question about our service, and enter in the competition!"
-      btnOkTitle="Yes, Lets go!"
-      btnCancelTitle="No, Thanks"
+      title="Thank you!"
+      description="Would you mind answering a few more questions to be in with a chance to win €100 voucher ?"
+      btnOkTitle="Yes"
+      btnCancelTitle="No"
       btnOkCallback={() => this.startFeedback()}
       btnCancelCallback={() => this.finishFeedbackNotAccept()}
     />
@@ -114,43 +114,36 @@ export default class Facebox extends Component {
   }
 
   render() {
-    const { active, formActive, showModal, showModalRefuse } = this.state;
+    const { active, showForm, showModal } = this.state;
     return (
       <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#27989f' }}>
         <View style={{ flex: 1 }}>
           <View
             style={{
-              width: '100%',
-              height: '100%',
+              flex: 1,
               alignItems: 'center',
-              alignSelf: 'center',
+              justifyContent: 'center',
               shadowOffset: { width: 0, height: 0 },
               shadowOpacity: 0.2,
               shadowRadius: 20,
               elevation: 3,
               backgroundColor: '#27989f',
             }}>
-            <View style={{ flex: 1, flexDirection: 'column', padding: 10, marginTop: '2%' }}>
-              <Animated.Image
-                source={require('../assets/images/servciedockicon.png')}
-                style={{
-                  alignSelf: 'center',
-                  width: 162,
-                  height: 162,
-                }}
-                resizeMode={'contain'}
-              />
-
+            <View
+              style={{
+                flex: 1,
+                width: 700,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
               <Text
                 style={{
-                  flex: 1,
+                  textAlign: 'center',
                   fontWeight: 'bold',
-                  fontSize: 45,
-                  alignSelf: 'center',
-                  marginTop: '5%',
+                  fontSize: 60,
                   color: 'white',
                 }}>
-                How was your experience at our Store today?
+                How was your checkout experience today?
               </Text>
             </View>
           </View>
@@ -162,19 +155,10 @@ export default class Facebox extends Component {
                 <View
                   style={{
                     flex: 1,
+                    justifyContent: 'center',
                     flexDirection: 'column',
                     alignItems: 'center',
                   }}>
-                  <Animated.Text
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 'bold',
-                      padding: 30,
-                      opacity:
-                        active === face.id ? this.imageOpacityValue : this.imageOpacityValueOff,
-                    }}>
-                    {face.title}
-                  </Animated.Text>
                   <Animated.Image
                     source={{ uri: face.uri }}
                     style={{
@@ -193,9 +177,8 @@ export default class Facebox extends Component {
             );
           })}
         </View>
-        {formActive && <FormComponent finishFeedback={() => this.finishFeedback()} />}
+        {showForm && <FormComponent finishFeedback={() => this.finishFeedback()} />}
         {showModal && this.modalAcceptSurvey()}
-        {showModalRefuse && this.modalRefuseSurvey()}
       </View>
     );
   }
