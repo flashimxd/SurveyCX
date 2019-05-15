@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { View } from 'react-native';
 import FaceBox from './FaceboxComponent';
+import Camera from './CameraComponent';
 
 class HomeComponent extends Component {
   static navigationOptions = {
@@ -14,6 +15,7 @@ class HomeComponent extends Component {
   render() {
     return (
       <View style={{ flex: 1 }}>
+        <Camera />
         <FaceBox />
       </View>
     );

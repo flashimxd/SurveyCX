@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { View, TouchableWithoutFeedback, Animated, Easing, Text, StyleSheet } from 'react-native';
 import FormComponent from './FormComponent';
 import Modal from './ModalComponent';
+import CameraComponent from './CameraComponent';
 
 const faces = [
   { id: 5, uri: 'https://i.ibb.co/MkPCcGK/5.png', title: 'Horrible' },
@@ -20,6 +21,7 @@ export default class Facebox extends Component {
       loading: false,
       showModal: false,
       showModalRefuse: false,
+      showCamera: false,
     };
     this.springValue = new Animated.Value(1);
     this.springValueOff = new Animated.Value(1.3);
@@ -37,6 +39,10 @@ export default class Facebox extends Component {
     this.setState({ active: 0 });
   };
 
+  toogleCamera = () => {
+    this.setState({ showCamera: !this.state.showCamera });
+  };
+
   confirmNps = () => {
     this.setState({ showModal: false, showModalCompetition: true });
   };
@@ -49,14 +55,19 @@ export default class Facebox extends Component {
     }, 1000);
   };
   spring = id => {
-    this.setState({ active: id });
+    console.log(id);
+    if (id === 1 || id === 2) {
+      this.toogleCamera();
+    } else {
+      this.setState({ active: id });
 
-    this.springValue.setValue(1.3);
-    this.imageOpacityValue.setValue(1);
+      this.springValue.setValue(1.3);
+      this.imageOpacityValue.setValue(1);
 
-    setTimeout(() => {
-      this.setState({ showModal: true });
-    }, 1000);
+      setTimeout(() => {
+        this.setState({ showModal: true });
+      }, 1000);
+    }
   };
   cancelFeedback = () => {
     this.setState({ active: 0, showModal: false });
@@ -66,54 +77,7 @@ export default class Facebox extends Component {
     this.setState({ showModalRefuse: false });
   };
 
-  modalRefuseSurvey = () => (
-    <Modal
-      show={this.state.showModalRefuse}
-      width={500}
-      height={300}
-      title="Thank you!"
-      description=" You vote was registered, thank you for your time!"
-      btnOkTitle="Finish"
-      btnOkCallback={() => this.hideModalRefuseSurvey()}
-    />
-  );
-
-  modalAcceptSurvey = () => (
-    <Modal
-      show={this.state.showModal}
-      width={500}
-      height={300}
-      title="Thank you!"
-      description="Would you mind answering a few more questions to be in with a chance to win €100 voucher ?"
-      btnOkTitle="Yes"
-      btnCancelTitle="No"
-      btnOkCallback={() => this.startFeedback()}
-      btnCancelCallback={() => this.finishFeedbackNotAccept()}
-    />
-  );
-
-  shouldComponentUpdate(nextProps, nextState) {
-    if (nextState.active !== this.state.active) {
-      this.springValueOff.setValue(1.3);
-      this.imageOpacityValueOff.setValue(1);
-
-      Animated.parallel([
-        Animated.spring(this.springValueOff, {
-          toValue: 1,
-          friction: 1,
-        }),
-        Animated.timing(this.imageOpacityValueOff, {
-          toValue: 0.6,
-          duration: 500,
-          easing: Easing.linear,
-        }),
-      ]).start();
-    }
-
-    return true;
-  }
-
-  render() {
+  titleScreenRender = () => {
     const { active, showForm, showModal } = this.state;
     return (
       <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#27989f' }}>
@@ -180,6 +144,61 @@ export default class Facebox extends Component {
         {showForm && <FormComponent finishFeedback={() => this.finishFeedback()} />}
         {showModal && this.modalAcceptSurvey()}
       </View>
+    );
+  };
+  modalRefuseSurvey = () => (
+    <Modal
+      show={this.state.showModalRefuse}
+      width={500}
+      height={300}
+      title="Thank you!"
+      description=" You vote was registered, thank you for your time!"
+      btnOkTitle="Finish"
+      btnOkCallback={() => this.hideModalRefuseSurvey()}
+    />
+  );
+
+  modalAcceptSurvey = () => (
+    <Modal
+      show={this.state.showModal}
+      width={500}
+      height={300}
+      title="Thank you!"
+      description="Would you mind answering a few more questions to be in with a chance to win €100 voucher ?"
+      btnOkTitle="Yes"
+      btnCancelTitle="No"
+      btnOkCallback={() => this.startFeedback()}
+      btnCancelCallback={() => this.finishFeedbackNotAccept()}
+    />
+  );
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (nextState.active !== this.state.active) {
+      this.springValueOff.setValue(1.3);
+      this.imageOpacityValueOff.setValue(1);
+
+      Animated.parallel([
+        Animated.spring(this.springValueOff, {
+          toValue: 1,
+          friction: 1,
+        }),
+        Animated.timing(this.imageOpacityValueOff, {
+          toValue: 0.6,
+          duration: 500,
+          easing: Easing.linear,
+        }),
+      ]).start();
+    }
+
+    return true;
+  }
+
+  render() {
+    const { showCamera } = this.state;
+    return !showCamera ? (
+      this.titleScreenRender()
+    ) : (
+      <CameraComponent toggle={() => this.toogleCamera()} />
     );
   }
 }
